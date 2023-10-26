@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import preprocessing as prep
 import polynomial_fit as fit
-import matplotlib as plt
 
 def process(image, mtx, dist):
 
@@ -10,7 +9,8 @@ def process(image, mtx, dist):
     height = image.shape[0]
 
     undistortedFrame = prep.undistortFrame(image, width, height, mtx, dist)
-    cannyFrame = prep.canny(undistortedFrame, 50, 150)
+    hsvImage = prep.hsv(undistortedFrame)
+    cannyFrame = prep.canny(hsvImage, 50, 150)
     warpedFrame, inverseM = prep.warpImage(cannyFrame)
 
     res = fit.lineFit(warpedFrame)
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     isVideo = True
 
     if isVideo:
-        cap = cv2.VideoCapture('../test_videos/project_video01.mp4')
+        cap = cv2.VideoCapture('../test_videos/challenge03.mp4')
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret: break
@@ -56,11 +56,11 @@ if __name__ == "__main__":
             result = process(frame, mtx, dist)
 
             cv2.imshow("result", result)
-            cv2.waitKey(30)
+            cv2.waitKey(1)
 
         cap.release()
     else:
-        image = cv2.imread("../test_images/solidYellowCurve.jpg")
+        image = cv2.imread("../jedan.png")
         result = process(image, mtx, dist)
         cv2.imshow("result", result)
         cv2.waitKey(0)

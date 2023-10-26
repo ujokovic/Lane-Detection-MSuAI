@@ -182,7 +182,7 @@ def finalVisualization(undistortedFrame, leftFit, rightFit, inverseM, leftCurve,
 	pts = np.hstack((ptsLeft, ptsRight))
 
 	# Draw the lane onto the warped blank image
-	cv2.fillPoly(colorWarp, np.int_([pts]), (0,255, 0))
+	cv2.fillPoly(colorWarp, np.int_([pts]), (150,150,150))
 
 	# Warp the blank back to original image space using inverse perspective matrix (Minv)
 	unwarpedImage = cv2.warpPerspective(colorWarp, inverseM, (undistortedFrame.shape[1], undistortedFrame.shape[0]))
