@@ -45,7 +45,7 @@ if __name__ == "__main__":
     dist = calibration['dist']
 
     # If 'True', video will be processed; If 'False', image will be processed
-    isVideo = True
+    isVideo = False
 
     if isVideo:
         cap = cv2.VideoCapture('../test_videos/challenge03.mp4')
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
         cap.release()
     else:
-        image = cv2.imread("../jedan.png")
+        image = cv2.imread("../test_images/straight_lines1.jpg")
         result = process(image, mtx, dist)
         cv2.imshow("result", result)
         cv2.waitKey(0)

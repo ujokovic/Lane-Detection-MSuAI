@@ -45,12 +45,3 @@ for i in range(1,21):
 # Calibrate the camera and save the results
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objectPointsArray, imgPointsArray, gray.shape[::-1], None, None)
 np.savez('../camera_cal/calib.npz', mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs)
-
-# Print the camera calibration error
-error = 0
-
-for i in range(len(objectPointsArray)):
-    imgPoints, _ = cv2.projectPoints(objectPointsArray[i], rvecs[i], tvecs[i], mtx, dist)
-    error += cv2.norm(imgPointsArray[i], imgPoints, cv2.NORM_L2) / len(imgPoints)
-
-print("Total error: ", error / len(objectPointsArray))

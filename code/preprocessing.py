@@ -12,8 +12,8 @@ def undistortFrame(image, width, height, mtx, dist):
     undistortedImg = undistortedImg[y:y+h, x:x+w]
 
     # Display the final result
-    # cv2.imshow('undistortedImg', np.hstack((image, undistortedImg)))
-    # cv2.imwrite('calibrationResult.jpg', undistortedImg)
+    # cv2.imwrite('undistortedImage.jpg', undistortedImg)
+    # cv2.waitKey(0)
     return undistortedImg
 
 def hsv(image):
