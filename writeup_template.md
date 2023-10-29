@@ -14,19 +14,15 @@ The goals / steps of this project are the following:
 [//]: # (Image References)
 
 [image0]: ./test_images/straight_lines1.jpg "Test image"
-[image1]: ./documentation_images/distorted_vs_undistorted.png "Distorted vs Undistorted image"
-[image2]: ./documentation_images/undistorted_image.jpg "Undistorted image"
-[image3]: ./documentation_images/preprocessed.jpg "Preprocessed image"
-[image4]: ./documentation_images/warped.jpg "Warped image"
-[image5]: ./documentation_images/histogram.jpg "Histogram of the lower half of image"
-[image6]: ./documentation_images/curve_fit.jpg "Fitted curve image"
-[image7]: ./documentation_images/radius_of_curvature.jpg "Radius of curvature formula"
-[image8]: ./documentation_images/final_result.jpg "Radius of curvature formula"
-
-
-<!-- [image5]: ./examples/color_fit_lines.jpg "Fit Visual"
-[image6]: ./examples/example_output.jpg "Output"
-[video1]: ./project_video.mp4 "Video" -->
+[image1]: ./documentation_images_and_videos/distorted_vs_undistorted.png "Distorted vs Undistorted image"
+[image2]: ./documentation_images_and_videos/undistorted_image.jpg "Undistorted image"
+[image3]: ./documentation_images_and_videos/preprocessed.jpg "Preprocessed image"
+[image4]: ./documentation_images_and_videos/warped.jpg "Warped image"
+[image5]: ./documentation_images_and_videos/histogram.jpg "Histogram of the lower half of image"
+[image6]: ./documentation_images_and_videos/curve_fit.jpg "Fitted curve image"
+[image7]: ./documentation_images_and_videos/radius_of_curvature.jpg "Radius of curvature formula"
+[image8]: ./documentation_images_and_videos/final_result.jpg "Final result image"
+[video1]: ./documentation_images_and_videos/final_result_video.avi "Final result video"
 
 ---
 
@@ -82,9 +78,7 @@ This is the example of distortion-corrected image with previously calculated cam
 
 In the `process()` function we first call the `undistortFrame()`. There we obtain the new camera matrix using `cv2.getOptimalNewCameraMatrix()` and then we undistort image using `cv2.undistort()`.
 
-Undistorted images will have black indentations around the edges, so to eliminate them we crop our image using `roi` which is the one of the returing values from the `cv2.getOptimalNewCameraMatrix()` function.
-
-So now we have our distortion-corrected image.
+Now we have our distortion-corrected image.
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
@@ -208,7 +202,8 @@ The final result can be seen in the image below:
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+Final result video was made from `test_videos/project_video03.mp4`
+Here's a [link to my video result](./documentation_images_and_videos/final_result_video.avi)
 
 ---
 

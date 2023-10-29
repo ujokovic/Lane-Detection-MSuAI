@@ -7,7 +7,6 @@ def lineFit(image):
     # Take a histogram of the bottom half of the image
     histogram = np.sum(image[int(height/2):,:], axis=0)
 
-    # Half of the x-axis
     midpoint = int(histogram.shape[0]/2)
 
     leftPeakXBase = np.argmax(histogram[:midpoint])
@@ -16,7 +15,6 @@ def lineFit(image):
     leftPeakXCurrent = leftPeakXBase
     rightPeakXCurrent = rightPeakXBase
 
-    # Window setup
     numOfWindows = 9
     windowHeight = int(height/numOfWindows)
     windowMargin = 100
@@ -46,7 +44,6 @@ def lineFit(image):
         leftLaneIndicies.append(goodLeftIndicies)
         rightLaneIndicies.append(goodRightIndicies)
 
-        # If you found > minpix pixels, recenter next window on their mean position
         if len(goodLeftIndicies) > minpix:
             leftPeakXCurrent = int(np.mean(nonzeroX[goodLeftIndicies]))
         if len(goodRightIndicies) > minpix:
@@ -75,9 +72,8 @@ def lineFit(image):
     return ret
 
 def calculateCurve(leftLaneIndicies, rightLaneIndicies, nonzeroX, nonzeroY):
-	yEval = 719  # 720p video/image, so last (lowest on screen) y index is 719
 
-	# Define conversions in x and y from pixels space to meters
+	yEval = 719
 	metersPerPixelY = 30/720 # meters per pixel in y dimension
 	metersPerPixelX = 3.7/700 # meters per pixel in x dimension
 
@@ -87,36 +83,29 @@ def calculateCurve(leftLaneIndicies, rightLaneIndicies, nonzeroX, nonzeroY):
 	rightX = nonzeroX[rightLaneIndicies]
 	rightY = nonzeroY[rightLaneIndicies]
 
-	# Fit new polynomials to x,y in world space
 	leftFitCurve = np.polyfit(leftY*metersPerPixelY, leftX*metersPerPixelX, 2)
 	rightFitCurve = np.polyfit(rightY*metersPerPixelY, rightX*metersPerPixelX, 2)
-	# Calculate the new radii of curvature
+
 	leftCurveRadius = ((1 + (2*leftFitCurve[0]*yEval*metersPerPixelY + leftFitCurve[1])**2)**1.5) / np.absolute(2*leftFitCurve[0])
 	rightCurveRadius = ((1 + (2*rightFitCurve[0]*yEval*metersPerPixelY + rightFitCurve[1])**2)**1.5) / np.absolute(2*rightFitCurve[0])
-	# Now our radius of curvature is in meters
 
 	return leftCurveRadius, rightCurveRadius
 
 def showResult(undistortedFrame, leftFit, rightFit, inverseM, leftCurve, rightCurve, vehicleOffset):
-	# Generate x and y values for plotting
+
 	plotY = np.linspace(0, undistortedFrame.shape[0]-1, undistortedFrame.shape[0])
 	leftFitX = leftFit[0]*plotY**2 + leftFit[1]*plotY + leftFit[2]
 	rightFitX = rightFit[0]*plotY**2 + rightFit[1]*plotY + rightFit[2]
 
-	# Create an image to draw the lines on
-	colorWarp = np.zeros((720, 1280, 3), dtype='uint8')  # NOTE: Hard-coded image dimensions
+	colorWarp = np.zeros((720, 1280, 3), dtype='uint8')
 
-	# Recast the x and y points into usable format for cv2.fillPoly()
 	ptsLeft = np.array([np.transpose(np.vstack([leftFitX, plotY]))])
 	ptsRight = np.array([np.flipud(np.transpose(np.vstack([rightFitX, plotY])))])
 	pts = np.hstack((ptsLeft, ptsRight))
 
-	# Draw the lane onto the warped blank image
 	cv2.fillPoly(colorWarp, np.int_([pts]), (150,150,150))
 
-	# Warp the blank back to original image space using inverse perspective matrix (Minv)
 	unwarpedImage = cv2.warpPerspective(colorWarp, inverseM, (undistortedFrame.shape[1], undistortedFrame.shape[0]))
-	# Combine the result with the original image
 	result = cv2.addWeighted(undistortedFrame, 1, unwarpedImage, 0.3, 0)
 
 	# Annotate lane curvature values and vehicle offset from center

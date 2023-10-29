@@ -14,7 +14,6 @@ def process(image, mtx, dist):
     warpedFrame, inverseM = prep.warpImage(cannyFrame)
 
     res = fit.lineFit(warpedFrame)
-    # fit.visualize(warpedFrame, res)
 
     leftFit = res['leftFit']
     rightFit = res['rightFit']
@@ -30,7 +29,7 @@ def process(image, mtx, dist):
     bottomXRight = rightFit[0]*(bottomY**2) + rightFit[1]*bottomY + rightFit[2]
     vehicleOffset = undistortedFrame.shape[1]/2 - (bottomXLeft + bottomXRight)/2
 
-    metersPerPixelX = 3.7/700    # x-axis
+    metersPerPixelX = 3.7/700
     vehicleOffset *= metersPerPixelX
 
     result = fit.showResult(undistortedFrame, leftFit, rightFit, inverseM, leftCurve, rightCurve, vehicleOffset)
@@ -48,13 +47,13 @@ if __name__ == "__main__":
     isVideo = True
 
     if isVideo:
-        cap = cv2.VideoCapture('../test_videos/project_video01.mp4')
+        cap = cv2.VideoCapture('../test_videos/project_video03.mp4')
 
         inputCodec = int(cap.get(cv2.CAP_PROP_FOURCC))
         frameRate = cap.get(cv2.CAP_PROP_FPS)
         frameWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         frameHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        outputVideo = cv2.VideoWriter('output_video.mp4', cv2.VideoWriter_fourcc(*'MJPG'), frameRate, (frameWidth, frameHeight))
+        outputVideo = cv2.VideoWriter('output_video.avi', cv2.VideoWriter_fourcc(*'MJPG'), frameRate, (frameWidth, frameHeight))
 
         while cap.isOpened():
             ret, frame = cap.read()
@@ -62,7 +61,8 @@ if __name__ == "__main__":
 
             result = process(frame, mtx, dist)
 
-            outputVideo.write(result)
+            # Uncomment if want to save processed video
+            # outputVideo.write(result)
 
             cv2.imshow("result", result)
             cv2.waitKey(1)
