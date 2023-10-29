@@ -48,7 +48,7 @@ if __name__ == "__main__":
     isVideo = False
 
     if isVideo:
-        cap = cv2.VideoCapture('../test_videos/challenge03.mp4')
+        cap = cv2.VideoCapture('../test_videos/project_video02.mp4')
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret: break

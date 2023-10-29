@@ -63,7 +63,7 @@ def warpImage(image):
     # cv2.imshow("points", image)
     # cv2.waitKey(0)
 
-    #destination points
+    # Destination points
     bottom_left = [0, height]
     bottom_right = [width, height]
     top_left = [0, height * 0.25]

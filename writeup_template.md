@@ -13,13 +13,17 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./documentation_images/distorted_vs_undistorted.png "Distorted vs Undistorted"
-[image2]: ./documentation_images/undistortedImage.jpg "Undistorted Road"
+[image0]: ./test_images/straight_lines1.jpg "Test image"
+[image1]: ./documentation_images/distorted_vs_undistorted.png "Distorted vs Undistorted image"
+[image2]: ./documentation_images/undistortedImage.jpg "Undistorted image"
 [image3]: ./documentation_images/preprocessed.jpg "Preprocessed image"
-[image4]: ./examples/warped_straight_lines.jpg "Warp Example"
-[image5]: ./examples/color_fit_lines.jpg "Fit Visual"
+[image4]: ./documentation_images/warped.jpg "Warped image"
+[image5]: ./documentation_images/histogram.jpg "Histogram of the lower half of image"
+[image6]: ./documentation_images/curveFit.jpg "Fitted curve image"
+
+<!-- [image5]: ./examples/color_fit_lines.jpg "Fit Visual"
 [image6]: ./examples/example_output.jpg "Output"
-[video1]: ./project_video.mp4 "Video"
+[video1]: ./project_video.mp4 "Video" -->
 
 ---
 
@@ -29,10 +33,17 @@ The goals / steps of this project are the following:
 
 This project contains 4 python files and they are all located in the `code/` directorium: `calibrate.py`, `preprocessing.py`, `polynomial_fit.py`,  and `lane.py`.
 
+`preprocessing.py` contains 4 functions: `undistortFrame()`, `hsv()`, `canny()`, and `warpImage()`.
+`polynomial_fit.py` contains 3 functions: `lineFit()`, `calculateCurve()` and `visualize()`.
+`lane.py` contains `main()` and `process()` functions.
+
 `preprocessing.py` and `polynomial_fit.py` are helper files and functions from there are called from the main file `lane.py`
 
 `calibrate.py` script is separated from the rest of the project. We run it only once and it calculates the
 camera calibration parameters and saves it to the `../camera_cal/calib.npz`.
+
+To demonstrate the code steps, we will use the image below:
+![alt text][image0]
 
 ### Camera Calibration
 
@@ -66,7 +77,7 @@ Every other function is called from this `process()` function, and we can say th
 This is the example of distortion-corrected image with previously calculated camera calibration parameters:
 ![alt text][image2]
 
-In the `process()` function we first call the `undistortFrame(image, width, height, mtx, dist)`. There we obtain the new camera matrix using `cv2.getOptimalNewCameraMatrix()` and then we undistort image using `cv2.undistort()`.
+In the `process()` function we first call the `undistortFrame()`. There we obtain the new camera matrix using `cv2.getOptimalNewCameraMatrix()` and then we undistort image using `cv2.undistort()`.
 
 Undistorted images will have black indentations around the edges, so to eliminate them we crop our image using `roi` which is the one of the returing values from the `cv2.getOptimalNewCameraMatrix()` function.
 
@@ -85,39 +96,60 @@ The result is shown in the image below:
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
+After we have successfuly identified edges on our image, now we need to do a perspective transform. In other words, effectively we find a region of interest where we are going to apply alogithm for curve fitting and lane finding.
 
-```python
-src = np.float32(
-    [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
-    [((img_size[0] / 6) - 10), img_size[1]],
-    [(img_size[0] * 5 / 6) + 60, img_size[1]],
-    [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
-dst = np.float32(
-    [[(img_size[0] / 4), 0],
-    [(img_size[0] / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), 0]])
-```
+So after the `canny()` function, we call the `warpImage()` function.
+First we need to do a perspective transform calling `cv2.getPerspectiveTransform()` function, which takes source (`src`) and destination (`dst`) points, as an inputs. `src` points are the coordinates of four points in the original image, and `dst` points are the corresponding coordinates to which you want to map the source points. We don't exactly hardcode the points, but based on the position of the car camera, we can experimentally determine the percentage of the image's width and height occupied by the road lane. So the code looks like this:
 
-This resulted in the following source and destination points:
+###### Source points
+    bottom_left = [round(width * 0.15), round(height * 0.9)]
+    bottom_right = [round(width * 0.9), round(height * 0.9)]
+    top_left = [round(width * 0.43), round(height * 0.65)]
+    top_right = [round(width * 0.59), round(height * 0.65)]
 
-| Source        | Destination   |
-|:-------------:|:-------------:|
-| 585, 460      | 320, 0        |
-| 203, 720      | 320, 720      |
-| 1127, 720     | 960, 720      |
-| 695, 460      | 960, 0        |
+###### Destination points
+    bottom_left = [0, height]
+    bottom_right = [width, height]
+    top_left = [0, height * 0.25]
+    top_right = [width, height * 0.25]
 
-I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
+Here we can see for example the bottom_left source point is located at the 15% of image's width and at 90% of image's height.
 
+`cv2.getPerspectiveTransform(src, dst)` gives us transofrmation matrix `M`, and after that we call `cv2.getPerspectiveTransform(dst, src)`
+to calculate inverse matrix `inverseM`. Inverse matrix, we will later use to unwarp the processed image.
+
+Then finally we call `cv2.warpPerspective()` to warp an image. Function `warpImage()` returns the warped image and the inverse matrix `M`.
+
+The warped image, can be seen below:
 ![alt text][image4]
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+The `lineFit()` function is a key component in the process of lane line detection and polynomial fitting within images.
+We can say that this function consists of 5 important parts which are listed below:
 
-![alt text][image5]
+
+1. **Histogram Computation** - Function starts by calculating a histogram of the lower half of the input binary image. The histogram reveals the distribution of pixel intensities along the horizontal axis and is used to identify initial estimates of the left and right lane positions. The result is shown in the picture below:
+   ![alt text][image5]
+
+2. **Lane Detection Windows** - Then we use 'window-based' approach, dividing the image into a specified number of vertical windows (typically 9 windows). A sliding window search is conducted to locate lane pixels within each window.
+
+3. **Lane Pixel Extraction** - The x and y coordinates of non-zero pixels are collected within each window. Variables `leftLaneIndicies` and `rightLaneIndicies` are filled those coordinates.
+
+4. **Polynomial Curve Fitting** - With the collected pixel coordinates, the function conducts polynomial curve fitting. It fits second-degree polynomial curves to represent the left and right lane lines. The coefficients of these polynomial equations are stored in variables `leftFit` and `rightFit`.
+
+5. **Results** - The function returns a dictionary named `ret`, containing essential results:
+   - `'leftFit'`: The coefficients of the polynomial fit for the left lane line.
+   - `'rightFit'`: The coefficients of the polynomial fit for the right lane line.
+   - `'nonzeroX'`: The x coordinates of non-zero (non-black) pixels in the image.
+   - `'nonzeroY'`: The y coordinates of non-zero pixels in the image.
+   - `'leftLaneIndicies'`: The indices of pixels belonging to the left lane.
+   - `'rightLaneIndicies'`: The indices of pixels belonging to the right lane.
+
+After successfuly fitting a curve, we get the result below:
+
+![alt text][image6]
+
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
