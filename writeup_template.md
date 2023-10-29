@@ -15,11 +15,14 @@ The goals / steps of this project are the following:
 
 [image0]: ./test_images/straight_lines1.jpg "Test image"
 [image1]: ./documentation_images/distorted_vs_undistorted.png "Distorted vs Undistorted image"
-[image2]: ./documentation_images/undistortedImage.jpg "Undistorted image"
+[image2]: ./documentation_images/undistorted_image.jpg "Undistorted image"
 [image3]: ./documentation_images/preprocessed.jpg "Preprocessed image"
 [image4]: ./documentation_images/warped.jpg "Warped image"
 [image5]: ./documentation_images/histogram.jpg "Histogram of the lower half of image"
-[image6]: ./documentation_images/curveFit.jpg "Fitted curve image"
+[image6]: ./documentation_images/curve_fit.jpg "Fitted curve image"
+[image7]: ./documentation_images/radius_of_curvature.jpg "Radius of curvature formula"
+[image8]: ./documentation_images/final_result.jpg "Radius of curvature formula"
+
 
 <!-- [image5]: ./examples/color_fit_lines.jpg "Fit Visual"
 [image6]: ./examples/example_output.jpg "Output"
@@ -29,12 +32,12 @@ The goals / steps of this project are the following:
 
 ### Writeup / README
 
-#### 1. Provide a Writeup that includes all the rubric points and how you addressed each one.
+#### 1. Poject overview
 
 This project contains 4 python files and they are all located in the `code/` directorium: `calibrate.py`, `preprocessing.py`, `polynomial_fit.py`,  and `lane.py`.
 
 `preprocessing.py` contains 4 functions: `undistortFrame()`, `hsv()`, `canny()`, and `warpImage()`.
-`polynomial_fit.py` contains 3 functions: `lineFit()`, `calculateCurve()` and `visualize()`.
+`polynomial_fit.py` contains 3 functions: `lineFit()`, `calculateCurve()` and `showResult()`.
 `lane.py` contains `main()` and `process()` functions.
 
 `preprocessing.py` and `polynomial_fit.py` are helper files and functions from there are called from the main file `lane.py`
@@ -52,7 +55,7 @@ To demonstrate the code steps, we will use the image below:
 `calibrate.py` script is used to calibrate a camera, which involves determining the camera's intrinsic parameters and distortion coefficients.
 #
 First we define number of rows and columns in the chessboard pattern and sets the termination criteria for the corner sub-pixel refinement algorithm.
-Then we prepare a grid of object points corresponding to the expected positions of corners on the chessboard. Here we assume that chessboard is fixed on the (x,y) plane at z=0. These object points are the same for all calibration images.
+Then we prepare a grid of object points corresponding to the expected positions of corners on the chessboard. Here we assume that chessboard is fixed on the ('x','y') plane at z=0. These object points are the same for all calibration images.
 
 Then we loop through the all calibration images in the `camera_cal/` directory.
 Each loaded image we convert to grayscale and attempt to find corners of the chessboard pattern using `cv2.findChessboardCorners()` function. If the corners are found, algorithm then refines their positions using the corner sub-pixel refinement algorithm.
@@ -121,6 +124,7 @@ to calculate inverse matrix `inverseM`. Inverse matrix, we will later use to unw
 Then finally we call `cv2.warpPerspective()` to warp an image. Function `warpImage()` returns the warped image and the inverse matrix `M`.
 
 The warped image, can be seen below:
+
 ![alt text][image4]
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
@@ -128,38 +132,75 @@ The warped image, can be seen below:
 The `lineFit()` function is a key component in the process of lane line detection and polynomial fitting within images.
 We can say that this function consists of 5 important parts which are listed below:
 
-
 1. **Histogram Computation** - Function starts by calculating a histogram of the lower half of the input binary image. The histogram reveals the distribution of pixel intensities along the horizontal axis and is used to identify initial estimates of the left and right lane positions. The result is shown in the picture below:
+
    ![alt text][image5]
 
 2. **Lane Detection Windows** - Then we use 'window-based' approach, dividing the image into a specified number of vertical windows (typically 9 windows). A sliding window search is conducted to locate lane pixels within each window.
 
-3. **Lane Pixel Extraction** - The x and y coordinates of non-zero pixels are collected within each window. Variables `leftLaneIndicies` and `rightLaneIndicies` are filled those coordinates.
+3. **Lane Pixel Extraction** - The 'x' and 'y' coordinates of non-zero pixels are collected within each window. Variables `leftLaneIndicies` and `rightLaneIndicies` are filled those coordinates.
 
 4. **Polynomial Curve Fitting** - With the collected pixel coordinates, the function conducts polynomial curve fitting. It fits second-degree polynomial curves to represent the left and right lane lines. The coefficients of these polynomial equations are stored in variables `leftFit` and `rightFit`.
 
-5. **Results** - The function returns a dictionary named `ret`, containing essential results:
-   - `'leftFit'`: The coefficients of the polynomial fit for the left lane line.
-   - `'rightFit'`: The coefficients of the polynomial fit for the right lane line.
-   - `'nonzeroX'`: The x coordinates of non-zero (non-black) pixels in the image.
-   - `'nonzeroY'`: The y coordinates of non-zero pixels in the image.
-   - `'leftLaneIndicies'`: The indices of pixels belonging to the left lane.
-   - `'rightLaneIndicies'`: The indices of pixels belonging to the right lane.
+5. **Return value** - The function returns a dictionary named `ret`, containing essential results:
+   - `leftFit`: The coefficients of the polynomial fit for the left lane line.
+   - `rightFit`: The coefficients of the polynomial fit for the right lane line.
+   - `nonzeroX`: The 'x' coordinates of non-zero (non-black) pixels in the image.
+   - `nonzeroY`: The 'y' coordinates of non-zero pixels in the image.
+   - `leftLaneIndicies`: The indices of pixels belonging to the left lane.
+   - `rightLaneIndicies`: The indices of pixels belonging to the right lane.
 
 After successfuly fitting a curve, we get the result below:
 
 ![alt text][image6]
 
-
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+Now, to determine radius of curvature for the left and right lane we use the function `calculateCurve()`.
+This function calculates the curvature of the lane lines based on pixel coordinates and converts the results into real world measurements.
+
+The function takes as input the pixel coordinates of the left and right lane lines (`leftLaneIndicies` and `rightLaneIndicies`) and the 'x' and 'y' coordinates of all non-zero pixels in the image (`nonzeroX` and `nonzeroY`)
+
+We can say that this function consists of 5 important parts which are listed below:
+
+1. **World Space Conversion** -  To convert the pixel coordinates into real world units, we define conversions for both the 'y' and 'x' dimensions. `metersPerPixelY` represents the conversion from pixels to meters in the 'y' dimension, and `metersPerPixelX` represents the conversion in the 'x' dimension.
+
+2. **Pixel Extraction** -  Then we extract the 'x' and 'y' coordinates of the left and right lane pixels based on the provided indices.
+
+3. **Polynomial Curve Fitting** -  Now, the new second-degree polynomial curves are fitted to the extracted pixel coordinates in world space for both the left and right lane lines. These curves are stored in the `leftFitCurve` and `rightFitCurve` variables.
+
+4. **Radius of Curvature Calculation** - The radius of curvature for each lane line is calculated using the fitted curves and the formula below:
+
+    ![alt text][image7]
+
+    The results, `leftCurveRadius` and `rightCurveRadius` are expressed in meters. It is possible to choose any 'y' value of the image to compute the radius of curvature, but it is the best to use the 'y' closest to the vehicle.
+
+5. **Return value** - The function returns the calculated radii of curvature for the left and right lane lines in meters.
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+Function that shows the final result with lane detected, radii of curvature for the left and right lane line and the vehicle offset from lane center is implemented in the `showResult()` function.
 
-![alt text][image6]
+We can say that this function consists of 8 important parts which are listed below:
+
+1. **Generate Plotting Values**: First we generate a set of 'x' and 'y' values for plotting the detected lane lines based on the provided polynomial coefficients (`leftFit` and `rightFit`). It calculates the lane line pixel positions in the image for the entire vertical range, resulting in `leftFitx` and `rightFitx` arrays.
+
+2. **Create ColorWarp Image**: Now we create a blank image `colorWarp` to serve as a canvas for drawing the detected lane lines. This image has dimensions matching the original undistorted frame, and it is initialized with zeros, creating a black canvas.
+
+3. **Recast Points for Drawing**: The 'x' and 'y' coordinates of the detected left and right lane lines are recast into a format suitable for use with the `cv2.fillPoly()` function. These points are stored in arrays named `ptsLeft` and `ptsRight`, and then combined into a single `pts` array.
+
+4. **Draw Lane Lines**: The detected lane lines are drawn onto the `colorWarp` image using `cv2.fillPoly()`. This results in two highlighted lane regions on the black canvas.
+
+5. **Inverse Perspective Transform**: The black canvas with the highlighted lane regions is transformed from the bird's-eye view back to the original perspective using the provided inverse perspective matrix (`inverseM` - we've calculated it before in the `warpImage()` function). The result is an image that aligns with the original undistorted frame's perspective.
+
+6. **Combine Images**: The transformed image with the annotated lane regions is combined with the original undistorted frame using the `cv2.addWeighted()` function.
+
+7. **Lane Curvature Annotation**: Then we add the text annotations to the result image. It displays the radius of curvature (which was calculated as a mean value of the `leftCurve` `rightCurve` values) of the lane lines and the vehicle's offset from the lane center.
+
+8. **Return value**: The function returns the final annotated image.
+
+The final result can be seen in the image below:
+![alt text][image8]
 
 ---
 

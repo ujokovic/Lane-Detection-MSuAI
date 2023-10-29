@@ -33,7 +33,7 @@ def process(image, mtx, dist):
     metersPerPixelX = 3.7/700    # x-axis
     vehicleOffset *= metersPerPixelX
 
-    result = fit.finalVisualization(undistortedFrame, leftFit, rightFit, inverseM, leftCurve, rightCurve, vehicleOffset)
+    result = fit.showResult(undistortedFrame, leftFit, rightFit, inverseM, leftCurve, rightCurve, vehicleOffset)
 
     return result
 
@@ -45,20 +45,30 @@ if __name__ == "__main__":
     dist = calibration['dist']
 
     # If 'True', video will be processed; If 'False', image will be processed
-    isVideo = False
+    isVideo = True
 
     if isVideo:
-        cap = cv2.VideoCapture('../test_videos/project_video02.mp4')
+        cap = cv2.VideoCapture('../test_videos/project_video01.mp4')
+
+        inputCodec = int(cap.get(cv2.CAP_PROP_FOURCC))
+        frameRate = cap.get(cv2.CAP_PROP_FPS)
+        frameWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        frameHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        outputVideo = cv2.VideoWriter('output_video.mp4', cv2.VideoWriter_fourcc(*'MJPG'), frameRate, (frameWidth, frameHeight))
+
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret: break
 
             result = process(frame, mtx, dist)
 
+            outputVideo.write(result)
+
             cv2.imshow("result", result)
             cv2.waitKey(1)
 
         cap.release()
+        outputVideo.release()
     else:
         image = cv2.imread("../test_images/straight_lines1.jpg")
         result = process(image, mtx, dist)

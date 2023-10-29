@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 
 def lineFit(image):
 
@@ -98,18 +97,18 @@ def calculateCurve(leftLaneIndicies, rightLaneIndicies, nonzeroX, nonzeroY):
 
 	return leftCurveRadius, rightCurveRadius
 
-def finalVisualization(undistortedFrame, leftFit, rightFit, inverseM, leftCurve, rightCurve, vehicleOffset):
+def showResult(undistortedFrame, leftFit, rightFit, inverseM, leftCurve, rightCurve, vehicleOffset):
 	# Generate x and y values for plotting
 	plotY = np.linspace(0, undistortedFrame.shape[0]-1, undistortedFrame.shape[0])
-	leftFitx = leftFit[0]*plotY**2 + leftFit[1]*plotY + leftFit[2]
-	rightFitx = rightFit[0]*plotY**2 + rightFit[1]*plotY + rightFit[2]
+	leftFitX = leftFit[0]*plotY**2 + leftFit[1]*plotY + leftFit[2]
+	rightFitX = rightFit[0]*plotY**2 + rightFit[1]*plotY + rightFit[2]
 
 	# Create an image to draw the lines on
 	colorWarp = np.zeros((720, 1280, 3), dtype='uint8')  # NOTE: Hard-coded image dimensions
 
 	# Recast the x and y points into usable format for cv2.fillPoly()
-	ptsLeft = np.array([np.transpose(np.vstack([leftFitx, plotY]))])
-	ptsRight = np.array([np.flipud(np.transpose(np.vstack([rightFitx, plotY])))])
+	ptsLeft = np.array([np.transpose(np.vstack([leftFitX, plotY]))])
+	ptsRight = np.array([np.flipud(np.transpose(np.vstack([rightFitX, plotY])))])
 	pts = np.hstack((ptsLeft, ptsRight))
 
 	# Draw the lane onto the warped blank image
