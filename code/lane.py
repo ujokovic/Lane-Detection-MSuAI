@@ -49,11 +49,11 @@ if __name__ == "__main__":
     if isVideo:
         cap = cv2.VideoCapture('../test_videos/project_video03.mp4')
 
-        inputCodec = int(cap.get(cv2.CAP_PROP_FOURCC))
-        frameRate = cap.get(cv2.CAP_PROP_FPS)
-        frameWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        frameHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        outputVideo = cv2.VideoWriter('output_video.avi', cv2.VideoWriter_fourcc(*'MJPG'), frameRate, (frameWidth, frameHeight))
+        # Uncomment if want to save processed video
+        # frameRate = cap.get(cv2.CAP_PROP_FPS)
+        # frameWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        # frameHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        # outputVideo = cv2.VideoWriter('../documentation_images_and_videos/final_result_video.avi', cv2.VideoWriter_fourcc(*'MJPG'), frameRate, (frameWidth, frameHeight))
 
         while cap.isOpened():
             ret, frame = cap.read()
@@ -68,7 +68,8 @@ if __name__ == "__main__":
             cv2.waitKey(1)
 
         cap.release()
-        outputVideo.release()
+        # Uncomment if want to save processed video
+        # outputVideo.release()
     else:
         image = cv2.imread("../test_images/straight_lines1.jpg")
         result = process(image, mtx, dist)

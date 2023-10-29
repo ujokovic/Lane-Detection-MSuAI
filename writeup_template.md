@@ -30,7 +30,7 @@ The goals / steps of this project are the following:
 
 #### 1. Poject overview
 
-This project contains 4 python files and they are all located in the `code/` directorium: `calibrate.py`, `preprocessing.py`, `polynomial_fit.py`,  and `lane.py`.
+This project contains 4 python files and they are all located in the `code/` directory: `calibrate.py`, `preprocessing.py`, `polynomial_fit.py`,  and `lane.py`.
 
 `preprocessing.py` contains 4 functions: `undistortFrame()`, `hsv()`, `canny()`, and `warpImage()`.
 `polynomial_fit.py` contains 3 functions: `lineFit()`, `calculateCurve()` and `showResult()`.
@@ -67,7 +67,7 @@ To test this, we applied this distortion correction to the test image using the 
 
 ### Pipeline (single images)
 
-So at first we have `lane.py` script which we run using the command `python3 lane.py`. There is bool variable `isVideo`. If the value of this variable is True, the code will process the desired video file, else if it is False, the code will process single desired image.
+So at first we have `lane.py` script which we run using the command `python3 lane.py` (**Note that it is important to run this script from the `code/` directory**). There is bool variable `isVideo`. If the value of this variable is True, the code will process the desired video file, else if it is False, the code will process single desired image.
 In both cases we call the `process()` function, where we pass the current image (or frame in case of video), `mtx` and `dist` as function arguments. `mtx` and `dist` were loaded only once, at the beggining of the program, from the mentioned `calib.npz` file.
 Every other function is called from this `process()` function, and we can say this is our main function.
 
@@ -203,7 +203,7 @@ The final result can be seen in the image below:
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
 Final result video was made from `test_videos/project_video03.mp4`
-Here's a [link to my video result](./documentation_images_and_videos/final_result_video.avi)
+Here's a [link to my video result](./documentation_images_and_videos/final_result_video.avi).
 
 ---
 
@@ -211,4 +211,7 @@ Here's a [link to my video result](./documentation_images_and_videos/final_resul
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.
+One of the issues occured when i run challenge03.mp4 video. Video runs for a little bit then just crashes and the program returns the following error:
+**'in polyfit raise TypeError("expected non-empty vector for x")'**. So thats the one thing i know for now that needs to be fixed.
+One of the potential improvements could involve implementing a more sophisticated algorithm for preprocessing the image. For instance, in challenge03.mp4, we can see that the lighting conditions are causing significant issues, which hinder our ability to detect the lanes.
+That's all I can think of for now.
