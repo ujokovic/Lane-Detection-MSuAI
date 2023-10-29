@@ -47,7 +47,7 @@ if __name__ == "__main__":
     isVideo = True
 
     if isVideo:
-        cap = cv2.VideoCapture('../test_videos/project_video03.mp4')
+        cap = cv2.VideoCapture('../test_videos/project_video01.mp4')
 
         # Uncomment if want to save processed video
         # frameRate = cap.get(cv2.CAP_PROP_FPS)

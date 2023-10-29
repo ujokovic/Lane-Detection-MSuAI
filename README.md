@@ -202,7 +202,7 @@ The final result can be seen in the image below:
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Final result video was made from `test_videos/project_video03.mp4`
+Final result video was made from `test_videos/project_video01.mp4`
 Here's a [link to my video result](./documentation_images_and_videos/final_result_video.avi).
 
 ---
