@@ -1,13 +1,6 @@
 import cv2
 import numpy as np
 
-def undistortFrame(image, width, height, mtx, dist):
-
-    newCameraMtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (width, height), 0, (width, height))
-    undistortedImg = cv2.undistort(image, mtx, dist, None, newCameraMtx)
-
-    return undistortedImg
-
 def hsv(image):
 
     hsvImage = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
