@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 
 def lineFit(image):
-
     height = image.shape[0]
     # Take a histogram of the bottom half of the image
     histogram = np.sum(image[int(height/2):,:], axis=0)
@@ -58,8 +57,16 @@ def lineFit(image):
     rightX = nonzeroX[rightLaneIndicies]
     rightY = nonzeroY[rightLaneIndicies]
 
-    leftFit = np.polyfit(leftY, leftX, 2)
-    rightFit = np.polyfit(rightY, rightX, 2)
+    # Add checks for empty vectors before fitting polynomials
+    if len(leftX) > 0 and len(leftY) > 0:
+        leftFit = np.polyfit(leftY, leftX, 2)
+    else:
+        leftFit = [0, 0, 0]  # Default to a horizontal line if no valid left lane points
+
+    if len(rightX) > 0 and len(rightY) > 0:
+        rightFit = np.polyfit(rightY, rightX, 2)
+    else:
+        rightFit = [0, 0, 0]  # Default to a horizontal line if no valid right lane points
 
     ret = {}
     ret['leftFit'] = leftFit
@@ -72,49 +79,54 @@ def lineFit(image):
     return ret
 
 def calculateCurve(leftLaneIndicies, rightLaneIndicies, nonzeroX, nonzeroY):
+    yEval = 719
+    metersPerPixelY = 30/720  # meters per pixel in y dimension
+    metersPerPixelX = 3.7/700  # meters per pixel in x dimension
 
-	yEval = 719
-	metersPerPixelY = 30/720 # meters per pixel in y dimension
-	metersPerPixelX = 3.7/700 # meters per pixel in x dimension
+    # Extract left and right line pixel positions
+    leftX = nonzeroX[leftLaneIndicies]
+    leftY = nonzeroY[leftLaneIndicies]
+    rightX = nonzeroX[rightLaneIndicies]
+    rightY = nonzeroY[rightLaneIndicies]
 
-	# Extract left and right line pixel positions
-	leftX = nonzeroX[leftLaneIndicies]
-	leftY = nonzeroY[leftLaneIndicies]
-	rightX = nonzeroX[rightLaneIndicies]
-	rightY = nonzeroY[rightLaneIndicies]
+    if len(leftX) > 0 and len(leftY) > 0:
+        leftFitCurve = np.polyfit(leftY * metersPerPixelY, leftX * metersPerPixelX, 2)
+    else:
+        leftFitCurve = [0, 0, 0]  # Default values if no left lane points are found
 
-	leftFitCurve = np.polyfit(leftY*metersPerPixelY, leftX*metersPerPixelX, 2)
-	rightFitCurve = np.polyfit(rightY*metersPerPixelY, rightX*metersPerPixelX, 2)
+    if len(rightX) > 0 and len(rightY) > 0:
+        rightFitCurve = np.polyfit(rightY * metersPerPixelY, rightX * metersPerPixelX, 2)
+    else:
+        rightFitCurve = [0, 0, 0]  # Default values if no right lane points are found
 
-	leftCurveRadius = ((1 + (2*leftFitCurve[0]*yEval*metersPerPixelY + leftFitCurve[1])**2)**1.5) / np.absolute(2*leftFitCurve[0])
-	rightCurveRadius = ((1 + (2*rightFitCurve[0]*yEval*metersPerPixelY + rightFitCurve[1])**2)**1.5) / np.absolute(2*rightFitCurve[0])
+    # Calculate the radius of curvature
+    leftCurveRadius = ((1 + (2 * leftFitCurve[0] * yEval * metersPerPixelY + leftFitCurve[1])**2)**1.5) / np.absolute(2 * leftFitCurve[0])
+    rightCurveRadius = ((1 + (2 * rightFitCurve[0] * yEval * metersPerPixelY + rightFitCurve[1])**2)**1.5) / np.absolute(2 * rightFitCurve[0])
 
-	return leftCurveRadius, rightCurveRadius
+    return leftCurveRadius, rightCurveRadius
 
 def showResult(undistortedFrame, leftFit, rightFit, inverseM, leftCurve, rightCurve, vehicleOffset):
+    plotY = np.linspace(0, undistortedFrame.shape[0]-1, undistortedFrame.shape[0])
+    leftFitX = leftFit[0]*plotY**2 + leftFit[1]*plotY + leftFit[2]
+    rightFitX = rightFit[0]*plotY**2 + rightFit[1]*plotY + rightFit[2]
 
-	plotY = np.linspace(0, undistortedFrame.shape[0]-1, undistortedFrame.shape[0])
-	leftFitX = leftFit[0]*plotY**2 + leftFit[1]*plotY + leftFit[2]
-	rightFitX = rightFit[0]*plotY**2 + rightFit[1]*plotY + rightFit[2]
+    colorWarp = np.zeros((720, 1280, 3), dtype='uint8')
 
-	colorWarp = np.zeros((720, 1280, 3), dtype='uint8')
+    ptsLeft = np.array([np.transpose(np.vstack([leftFitX, plotY]))])
+    ptsRight = np.array([np.flipud(np.transpose(np.vstack([rightFitX, plotY])))])
+    pts = np.hstack((ptsLeft, ptsRight))
 
-	ptsLeft = np.array([np.transpose(np.vstack([leftFitX, plotY]))])
-	ptsRight = np.array([np.flipud(np.transpose(np.vstack([rightFitX, plotY])))])
-	pts = np.hstack((ptsLeft, ptsRight))
+    cv2.fillPoly(colorWarp, np.int_([pts]), (150, 150, 150))
 
-	cv2.fillPoly(colorWarp, np.int_([pts]), (150,150,150))
+    unwarpedImage = cv2.warpPerspective(colorWarp, inverseM, (undistortedFrame.shape[1], undistortedFrame.shape[0]))
+    result = cv2.addWeighted(undistortedFrame, 1, unwarpedImage, 0.3, 0)
 
-	unwarpedImage = cv2.warpPerspective(colorWarp, inverseM, (undistortedFrame.shape[1], undistortedFrame.shape[0]))
-	result = cv2.addWeighted(undistortedFrame, 1, unwarpedImage, 0.3, 0)
+    # Annotate lane curvature values and vehicle offset from center
+    averageCurve = (leftCurve + rightCurve) / 2
+    label = 'Radius of curvature: %.1f m' % averageCurve
+    result = cv2.putText(result, label, (30, 40), 0, 1, (0, 0, 0), 2, cv2.LINE_AA)
 
-	# Annotate lane curvature values and vehicle offset from center
-	averageCurve = (leftCurve + rightCurve)/2
-	label = 'Radius of curvature: %.1f m' % averageCurve
-	result = cv2.putText(result, label, (30,40), 0, 1, (0,0,0), 2, cv2.LINE_AA)
+    label = 'Vehicle offset from lane center: %.1f m' % vehicleOffset
+    result = cv2.putText(result, label, (30, 70), 0, 1, (0, 0, 0), 2, cv2.LINE_AA)
 
-	label = 'Vehicle offset from lane center: %.1f m' % vehicleOffset
-	result = cv2.putText(result, label, (30,70), 0, 1, (0,0,0), 2, cv2.LINE_AA)
-
-	return result
-
+    return result

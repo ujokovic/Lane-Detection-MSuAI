@@ -4,7 +4,6 @@ import preprocessing as prep
 import polynomial_fit as fit
 
 def process(image):
-
     hsvImage = prep.hsv(image)
     cannyFrame = prep.canny(hsvImage, 50, 150)
     warpedFrame, inverseM = prep.warpImage(cannyFrame)
@@ -33,11 +32,13 @@ def process(image):
     return result
 
 if __name__ == "__main__":
-    # If 'True', video will be processed; If 'False', image will be processed
-    isVideo = True
+    # Options: Set to True for video, image, or camera
+    isVideo = True  # Set to True to process video
+    isImage = False  # Set to True to process static image
+    useCamera = False  # Set to True to process from camera
 
     if isVideo:
-        cap = cv2.VideoCapture('../test_videos/challenge01.mp4')
+        cap = cv2.VideoCapture('../test_videos/challenge03.mp4')
 
         # Uncomment if want to save processed video
         # frameRate = cap.get(cv2.CAP_PROP_FPS)
@@ -60,10 +61,30 @@ if __name__ == "__main__":
         cap.release()
         # Uncomment if want to save processed video
         # outputVideo.release()
-    else:
+
+    elif isImage:
         image = cv2.imread("../test_images/straight_lines1.jpg")
         result = process(image)
         cv2.imshow("result", result)
         cv2.waitKey(0)
+
+    elif useCamera:
+        # Open camera (0 is usually the default camera)
+        cap = cv2.VideoCapture(0)
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                print("Failed to grab frame")
+                break
+
+            result = process(frame)
+            cv2.imshow("result", result)
+
+            # Break loop if 'q' is pressed
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+        cap.release()
 
     cv2.destroyAllWindows()
